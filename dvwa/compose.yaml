@@ -1,0 +1,22 @@
+name: dvwa
+
+include:
+  - ../kali/compose.yaml
+
+services:
+  dvwa:
+    image: ghcr.io/digininja/dvwa:latest
+    environment:
+      DB_SERVER: db
+    depends_on: [db]
+    networks: [lab]
+
+  # DVWA's stock database credentials; the lab network is isolated.
+  db:
+    image: mariadb:10
+    environment:
+      MYSQL_ROOT_PASSWORD: dvwa
+      MYSQL_DATABASE: dvwa
+      MYSQL_USER: dvwa
+      MYSQL_PASSWORD: p@ssw0rd
+    networks: [lab]
