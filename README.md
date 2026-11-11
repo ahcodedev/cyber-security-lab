@@ -13,20 +13,26 @@ brew bundle
 prek install
 ```
 
-## Lab
+## Labs
 
-Requires Docker. The lab lives in `owasp_juiceshop/`: OWASP Juice Shop (target) and a Kali desktop (attacker) run on an internal Docker network with no internet access.
+Requires Docker. Each lab pairs a vulnerable target with the shared Kali desktop in `kali/` on an internal Docker network with no internet access. Only one lab runs at a time; starting one stops the other.
 
-| Command                 | Purpose                                         |
-| ----------------------- | ----------------------------------------------- |
-| `just juice-shop-up`    | Build and start the lab; auto-off after 2 hours |
-| `just juice-shop-up 30` | Same, with auto-off after 30 minutes            |
-| `just juice-shop-down`  | Stop the lab                                    |
+| Command                 | Purpose                                                    |
+| ----------------------- | ---------------------------------------------------------- |
+| `just juice-shop-up`    | Build and start the Juice Shop lab; auto-off after 2 hours |
+| `just dvwa-up`          | Build and start the DVWA lab; auto-off after 2 hours       |
+| `just juice-shop-up 30` | Either `up` command takes an auto-off time in minutes      |
+| `just juice-shop-down`  | Stop the lab (`just dvwa-down` does the same)              |
+
+| Lab        | Directory          | Target URL inside Kali   | Notes                                                              |
+| ---------- | ------------------ | ------------------------ | ------------------------------------------------------------------ |
+| Juice Shop | `owasp_juiceshop/` | `http://juice-shop:3000` |                                                                    |
+| DVWA       | `dvwa/`            | `http://dvwa`            | Log in as `admin` / `password`, then click Create / Reset Database |
 
 - Kali desktop: <http://127.0.0.1:6080/vnc.html>, password `kalilab` (override with `VNC_PASSWORD`, max 8 characters).
-- Juice Shop is reachable only from inside Kali, at `http://juice-shop:3000`.
-- `/home/kali` persists in the `kali-home` volume; everything else resets on `just juice-shop-down`.
-- To add or update tools, edit `owasp_juiceshop/kali/Dockerfile` and run `docker compose -f owasp_juiceshop/compose.yaml build --pull --no-cache kali`.
+- Targets are reachable only from inside Kali.
+- `/home/kali` persists in the `kali-home` volume, shared by both labs; everything else resets when a lab stops.
+- To add or update tools, edit `kali/Dockerfile` and run `docker compose -f kali/compose.yaml build --pull --no-cache kali`.
 
 ## Security checks
 
@@ -37,4 +43,3 @@ Requires Docker. The lab lives in `owasp_juiceshop/`: OWASP Juice Shop (target) 
 | `prek run -a`   | Run the pre-commit hooks manually |
 
 Both checks run on commit via prek and in CI via `.github/workflows/security.yml`.
-    
