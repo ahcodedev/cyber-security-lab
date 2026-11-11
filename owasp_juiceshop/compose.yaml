@@ -1,0 +1,35 @@
+name: juice-shop
+
+services:
+  juice-shop:
+    image: bkimminich/juice-shop
+    networks: [lab]
+
+  kali:
+    build: ./kali
+    environment:
+      VNC_PASSWORD: ${VNC_PASSWORD:-kalilab}
+    shm_size: 2gb
+    volumes:
+      - kali-home:/home/kali
+    networks: [lab]
+
+  # Only path between the host and the lab: forwards the Kali desktop (noVNC).
+  gateway:
+    image: alpine/socat
+    command: TCP-LISTEN:6080,fork,reuseaddr TCP:kali:6080
+    ports:
+      - "127.0.0.1:6080:6080"
+    read_only: true
+    cap_drop: [ALL]
+    depends_on: [kali]
+    networks: [lab, edge]
+
+networks:
+  # No route to the host network or the internet.
+  lab:
+    internal: true
+  edge:
+
+volumes:
+  kali-home:
