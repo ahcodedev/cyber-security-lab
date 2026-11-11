@@ -21,6 +21,13 @@ RUN useradd --create-home --shell /bin/bash --groups sudo kali \
     && mkdir -p /tmp/.X11-unix \
     && chmod 1777 /tmp/.X11-unix
 
+# nuclei fetches its templates at runtime, which the offline lab cannot do.
+# Kept outside /home/kali, which is hidden by the shared volume.
+RUN git clone --depth 1 https://github.com/projectdiscovery/nuclei-templates /opt/nuclei-templates \
+    && rm -rf /opt/nuclei-templates/.git \
+    && chown -R kali:kali /opt/nuclei-templates
+ENV NUCLEI_TEMPLATES_DIR=/opt/nuclei-templates
+
 COPY --chmod=755 entrypoint.sh /usr/local/bin/entrypoint.sh
 
 USER kali

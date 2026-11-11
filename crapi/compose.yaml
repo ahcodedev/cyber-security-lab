@@ -1,0 +1,159 @@
+name: crapi
+
+include:
+  - ../kali/compose.yaml
+
+# Adapted from crAPI's deploy/docker/docker-compose.yml, with its stock credentials.
+# Nothing is published to the host, state is not persisted, and the chatbot is left
+# out because it needs an OpenAI key and internet access.
+
+x-healthcheck: &healthcheck
+  interval: 15s
+  timeout: 15s
+  retries: 15
+
+x-databases: &databases
+  DB_NAME: crapi
+  DB_USER: admin
+  DB_PASSWORD: crapisecretpassword
+  DB_HOST: postgresdb
+  DB_PORT: 5432
+  MONGO_DB_HOST: mongodb
+  MONGO_DB_PORT: 27017
+  MONGO_DB_USER: admin
+  MONGO_DB_PASSWORD: crapisecretpassword
+  MONGO_DB_NAME: crapi
+
+services:
+  crapi-web:
+    image: crapi/crapi-web:latest
+    environment:
+      COMMUNITY_SERVICE: crapi-community:8087
+      IDENTITY_SERVICE: crapi-identity:8080
+      WORKSHOP_SERVICE: crapi-workshop:8000
+      CHATBOT_SERVICE: crapi-chatbot:5002
+      MAILHOG_WEB_SERVICE: mailhog:8025
+      TLS_ENABLED: "false"
+    depends_on:
+      crapi-community: { condition: service_healthy }
+      crapi-identity: { condition: service_healthy }
+      crapi-workshop: { condition: service_healthy }
+    healthcheck:
+      <<: *healthcheck
+      test: curl 0.0.0.0:80/health
+    networks:
+      lab:
+        # nginx will not start unless the chatbot hostname resolves.
+        aliases: [crapi-chatbot]
+
+  crapi-identity:
+    image: crapi/crapi-identity:latest
+    environment:
+      <<: *databases
+      LOG_LEVEL: INFO
+      SERVER_PORT: 8080
+      ENABLE_SHELL_INJECTION: "false"
+      ENABLE_LOG4J: "false"
+      JWT_SECRET: crapi
+      JWT_EXPIRATION: 604800000
+      MAILHOG_HOST: mailhog
+      MAILHOG_PORT: 1025
+      MAILHOG_DOMAIN: example.com
+      SMTP_HOST: smtp.example.com
+      SMTP_PORT: 587
+      SMTP_EMAIL: user@example.com
+      SMTP_PASS: xxxxxxxxxxxxxx
+      SMTP_FROM: no-reply@example.com
+      SMTP_AUTH: "true"
+      SMTP_STARTTLS: "true"
+      API_GATEWAY_URL: https://api.mypremiumdealership.com
+      TLS_ENABLED: "false"
+    depends_on:
+      postgresdb: { condition: service_healthy }
+      mongodb: { condition: service_healthy }
+      mailhog: { condition: service_healthy }
+    healthcheck:
+      <<: *healthcheck
+      test: /app/health.sh
+    networks: [lab]
+
+  crapi-community:
+    image: crapi/crapi-community:latest
+    environment:
+      <<: *databases
+      LOG_LEVEL: INFO
+      SERVER_PORT: 8087
+      IDENTITY_SERVICE: crapi-identity:8080
+      TLS_ENABLED: "false"
+    depends_on:
+      postgresdb: { condition: service_healthy }
+      mongodb: { condition: service_healthy }
+      crapi-identity: { condition: service_healthy }
+    healthcheck:
+      <<: *healthcheck
+      test: /app/health.sh
+    networks: [lab]
+
+  crapi-workshop:
+    image: crapi/crapi-workshop:latest
+    environment:
+      <<: *databases
+      LOG_LEVEL: INFO
+      SERVER_PORT: 8000
+      IDENTITY_SERVICE: crapi-identity:8080
+      SECRET_KEY: crapi
+      API_GATEWAY_URL: https://api.mypremiumdealership.com
+      TLS_ENABLED: "false"
+      FILES_LIMIT: 1000
+    depends_on:
+      postgresdb: { condition: service_healthy }
+      mongodb: { condition: service_healthy }
+      crapi-identity: { condition: service_healthy }
+      crapi-community: { condition: service_healthy }
+    healthcheck:
+      <<: *healthcheck
+      test: /app/health.sh
+    networks: [lab]
+
+  postgresdb:
+    image: postgres:14
+    command: ["postgres", "-c", "max_connections=500"]
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: crapisecretpassword
+      POSTGRES_DB: crapi
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "pg_isready"]
+    networks: [lab]
+
+  mongodb:
+    image: mongo:4.4
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: crapisecretpassword
+    healthcheck:
+      <<: *healthcheck
+      test: echo 'db.runCommand("ping").ok' | mongo mongodb:27017/test --quiet
+      start_period: 20s
+    networks: [lab]
+
+  # Catches the emails crAPI sends (sign-up, OTP, vehicle details).
+  mailhog:
+    image: crapi/mailhog:latest
+    user: root
+    environment:
+      MH_MONGO_URI: admin:crapisecretpassword@mongodb:27017
+      MH_STORAGE: mongodb
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "nc", "-z", "localhost", "8025"]
+    networks: [lab]
+
+  api.mypremiumdealership.com:
+    image: crapi/gateway-service:latest
+    healthcheck:
+      <<: *healthcheck
+      test: bash -c 'echo -n "GET / HTTP/1.1\n\n" > /dev/tcp/127.0.0.1/443'
+      start_period: 15s
+    networks: [lab]
