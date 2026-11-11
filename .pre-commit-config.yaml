@@ -12,3 +12,9 @@ repos:
         language: system
         pass_filenames: false
         files: ^\.github/
+      - id: check-digests
+        name: check-digests
+        entry: just check-digests
+        language: system
+        pass_filenames: false
+        files: (compose.*\.ya?ml|Dockerfile.*)$

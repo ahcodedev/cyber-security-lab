@@ -10,6 +10,17 @@ gitleaks *args:
 zizmor *args:
     zizmor {{ args }} .
 
+# Check every container image is pinned by digest (locally built `lab-*` images are exempt)
+check-digests:
+    #!/usr/bin/env sh
+    unpinned=$(grep -rnE --exclude-dir=.git --include='*compose*.yaml' --include='*compose*.yml' --include='Dockerfile*' \
+        '^[[:space:]]*(image:|FROM[[:space:]])' . | grep -v '@sha256:' | grep -vE 'image:[[:space:]]*lab-|FROM[[:space:]]+scratch')
+    if [ -n "$unpinned" ]; then
+        echo "Images not pinned by digest:"
+        echo "$unpinned"
+        exit 1
+    fi
+
 # Start the Juice Shop lab; it shuts itself down after `ttl` minutes
 juice-shop-up ttl="120": (lab-up "owasp_juiceshop" ttl)
 
@@ -28,6 +39,12 @@ crapi-up ttl="120": (lab-up "crapi" ttl)
 # Stop the crAPI lab
 crapi-down: lab-down
 
+# Start the DVGA lab; it shuts itself down after `ttl` minutes
+dvga-up ttl="120": (lab-up "dvga" ttl)
+
+# Stop the DVGA lab
+dvga-down: lab-down
+
 # Labs share the Kali desktop port, so only one runs at a time.
 [private]
 lab-up dir ttl: lab-down
@@ -42,3 +59,4 @@ lab-down:
     docker compose -f owasp_juiceshop/compose.yaml down
     docker compose -f dvwa/compose.yaml down
     docker compose -f crapi/compose.yaml down
+    docker compose -f dvga/compose.yaml down
