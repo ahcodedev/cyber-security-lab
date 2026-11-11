@@ -45,6 +45,12 @@ dvga-up ttl="120": (lab-up "dvga" ttl)
 # Stop the DVGA lab
 dvga-down: lab-down
 
+# Start the WebGoat lab; it shuts itself down after `ttl` minutes
+webgoat-up ttl="120": (lab-up "webgoat" ttl)
+
+# Stop the WebGoat lab
+webgoat-down: lab-down
+
 # Labs share the Kali desktop port, so only one runs at a time.
 [private]
 lab-up dir ttl: lab-down
@@ -60,3 +66,4 @@ lab-down:
     docker compose -f dvwa/compose.yaml down
     docker compose -f crapi/compose.yaml down
     docker compose -f dvga/compose.yaml down
+    docker compose -f webgoat/compose.yaml down

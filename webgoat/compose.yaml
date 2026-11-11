@@ -1,0 +1,14 @@
+name: webgoat
+
+include:
+  - ../kali/compose.yaml
+
+services:
+  # WebGoat (8080) and WebWolf (9090) run in the same container.
+  webgoat:
+    image: webgoat/webgoat:latest@sha256:95c23e70502d0e0e11a826a73889e2ca93f965171202c17c0c59353ba67be86a
+    environment:
+      # Host names WebGoat uses in links (default 127.0.0.1); the image already binds 0.0.0.0.
+      WEBGOAT_HOST: webgoat
+      WEBWOLF_HOST: webgoat
+    networks: [lab]
