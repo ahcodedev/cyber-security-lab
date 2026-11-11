@@ -15,24 +15,15 @@ prek install
 
 ## Labs
 
-Requires Docker. Each lab pairs a vulnerable target with the shared Kali desktop in `kali/` on an internal Docker network with no internet access. Only one lab runs at a time; starting one stops the other.
+Requires Docker. Each lab pairs a deliberately vulnerable target with a shared [Kali desktop](kali/README.md) on an isolated Docker network. One lab runs at a time, and each shuts itself down after 2 hours.
 
-| Command                 | Purpose                                                    |
-| ----------------------- | ---------------------------------------------------------- |
-| `just juice-shop-up`    | Build and start the Juice Shop lab; auto-off after 2 hours |
-| `just dvwa-up`          | Build and start the DVWA lab; auto-off after 2 hours       |
-| `just juice-shop-up 30` | Either `up` command takes an auto-off time in minutes      |
-| `just juice-shop-down`  | Stop the lab (`just dvwa-down` does the same)              |
+| Lab                                     | Target                                     | Start                | Stop                   |
+| --------------------------------------- | ------------------------------------------ | -------------------- | ---------------------- |
+| [Juice Shop](owasp_juiceshop/README.md) | Insecure online shop (web app)             | `just juice-shop-up` | `just juice-shop-down` |
+| [DVWA](dvwa/README.md)                  | One page per vulnerability class (PHP)     | `just dvwa-up`       | `just dvwa-down`       |
+| [crAPI](crapi/README.md)                | Vulnerable API application (microservices) | `just crapi-up`      | `just crapi-down`      |
 
-| Lab        | Directory          | Target URL inside Kali   | Notes                                                              |
-| ---------- | ------------------ | ------------------------ | ------------------------------------------------------------------ |
-| Juice Shop | `owasp_juiceshop/` | `http://juice-shop:3000` |                                                                    |
-| DVWA       | `dvwa/`            | `http://dvwa`            | Log in as `admin` / `password`, then click Create / Reset Database |
-
-- Kali desktop: <http://127.0.0.1:6080/vnc.html>, password `kalilab` (override with `VNC_PASSWORD`, max 8 characters).
-- Targets are reachable only from inside Kali.
-- `/home/kali` persists in the `kali-home` volume, shared by both labs; everything else resets when a lab stops.
-- To add or update tools, edit `kali/Dockerfile` and run `docker compose -f kali/compose.yaml build --pull --no-cache kali`.
+After starting a lab, open the Kali desktop at <http://127.0.0.1:6080/vnc.html> (password `kalilab`). Each lab's README covers its usage.
 
 ## Security checks
 

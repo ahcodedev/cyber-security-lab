@@ -28,6 +28,6 @@ networks:
   edge:
 
 volumes:
-  # Fixed name so every lab shares the same home directory.
+  # Shared by every lab, so it is created outside Compose (see `lab-up` in the justfile).
   kali-home:
-    name: kali-home
+    external: true
