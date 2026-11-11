@@ -43,3 +43,5 @@ docker compose -f kali/compose.yaml build --pull --no-cache kali
 ```
 
 The image is about 18 GB and a full rebuild takes a long time.
+
+The base image is pinned by digest in `Dockerfile`, so `--pull` does not move it. To update it, replace the digest with the `Digest:` line from `docker buildx imagetools inspect kalilinux/kali-rolling:latest`. Packages still come from the live Kali mirrors at build time.

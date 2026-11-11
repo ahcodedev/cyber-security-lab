@@ -5,7 +5,7 @@ include:
 
 services:
   dvwa:
-    image: ghcr.io/digininja/dvwa:latest
+    image: ghcr.io/digininja/dvwa:latest@sha256:8029450682bd70e2e8cd1ffe8e46dd1885ff2a913296091cebfa8ba0a7d36498
     environment:
       DB_SERVER: db
     depends_on: [db]
@@ -13,7 +13,7 @@ services:
 
   # DVWA's stock database credentials; the lab network is isolated.
   db:
-    image: mariadb:10
+    image: mariadb:10@sha256:d769e37960821dfdcf096954f6e7ac89f747e116c1bba98e48edd265dfc7deae
     environment:
       MYSQL_ROOT_PASSWORD: dvwa
       MYSQL_DATABASE: dvwa
