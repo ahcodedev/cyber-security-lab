@@ -23,6 +23,7 @@ Requires Docker. Each lab pairs a deliberately vulnerable target with a shared [
 | [DVWA](dvwa/README.md)                  | One page per vulnerability class (PHP)     | `just dvwa-up`       | `just dvwa-down`       |
 | [crAPI](crapi/README.md)                | Vulnerable API application (microservices) | `just crapi-up`      | `just crapi-down`      |
 | [DVGA](dvga/README.md)                  | Vulnerable GraphQL API (Python)            | `just dvga-up`       | `just dvga-down`       |
+| [WebGoat](webgoat/README.md)            | Guided lessons with WebWolf helper (Java)  | `just webgoat-up`    | `just webgoat-down`    |
 
 After starting a lab, open the Kali desktop at <http://127.0.0.1:6080/vnc.html> (password `kalilab`). Each lab's README covers its usage.
 
